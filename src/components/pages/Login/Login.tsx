@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
+import { Link } from '@tanstack/react-router';
 import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
-import { validateUsernameOrEmail, validatePassword } from '../../../utils';
-import { login, type ApiResponse, type LoginData } from '../../../services/authApi';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface FormErrors {
   usernameOrEmail?: string;
@@ -14,77 +14,35 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login } = useAuth();
 
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-
-  // Validate all fields
-  const usernameOrEmailError = validateUsernameOrEmail(usernameOrEmail);
-  const passwordError = validatePassword(password);
-
-  if (usernameOrEmailError || passwordError) {
-    setErrors({
-      usernameOrEmail: usernameOrEmailError,
-      password: passwordError,
-    });
-    return;
-  }
-
-  // Clear errors
-  setErrors({});
-  setIsSubmitting(true);
-
-  try {
-    const response: ApiResponse<LoginData> = await login(usernameOrEmail, password);
-    
-    if (response.success) {
-      console.log('Login successful:', response.data);
-      
-      // Store tokens
-      localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.refreshToken);
-      
-      // Store user data
-      const userData = {
-        userId: response.data.userId,
-        username: response.data.username,
-        email: response.data.email,
-        fullName: response.data.fullName,
-        role: response.data.role,
-        privileges: response.data.privileges,
-      };
-      localStorage.setItem('user', JSON.stringify(userData));
-
-      // Show success message
-      alert(`${response.message || 'Login successful!'}`);
-      
-      // Redirect to dashboard or home page
-      // Example: navigate('/dashboard');
-    } else {
-      setErrors({ 
-        usernameOrEmail: response.message || 'Login failed' 
-      });
+    // Basic validation
+    if (!usernameOrEmail.trim()) {
+      setErrors({ usernameOrEmail: 'Username or email is required' });
+      return;
     }
-    
-  } catch (error) {
-    console.error('Login failed:', error);
-    setErrors({ 
-      usernameOrEmail: error instanceof Error ? error.message : 'Invalid username/email or password' 
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
 
-  const handleUsernameOrEmailBlur = () => {
-    const error = validateUsernameOrEmail(usernameOrEmail);
-    setErrors(prev => ({ ...prev, usernameOrEmail: error }));
-  };
+    if (!password.trim()) {
+      setErrors({ password: 'Password is required' });
+      return;
+    }
 
-  const handlePasswordBlur = () => {
-    const error = validatePassword(password);
-    setErrors(prev => ({ ...prev, password: error }));
+    // Clear errors
+    setErrors({});
+    setIsSubmitting(true);
+
+    try {
+      await login(usernameOrEmail, password);
+    } catch (error) {
+      setErrors({
+        usernameOrEmail: error instanceof Error ? error.message : 'Login failed'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -117,7 +75,6 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
                   type="text"
                   value={usernameOrEmail}
                   onChange={(e) => setUsernameOrEmail(e.target.value)}
-                  onBlur={handleUsernameOrEmailBlur}
                   className={`block w-full pl-10 pr-3 py-2.5 border ${errors.usernameOrEmail ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
                     } rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors`}
                   placeholder="username or you@example.com"
@@ -143,7 +100,6 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onBlur={handlePasswordBlur}
                   className={`block w-full pl-10 pr-10 py-2.5 border ${errors.password ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
                     } rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors`}
                   placeholder="Enter your password"
@@ -179,9 +135,9 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
                   Remember me
                 </label>
               </div>
-              <a href="#" className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
+              <Link to="/forgot-password" className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
                 Forgot password?
-              </a>
+              </Link>
             </div>
 
             {/* Submit Button */}
