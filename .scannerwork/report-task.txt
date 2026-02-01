@@ -1,0 +1,6 @@
+projectKey=sjmtfrotend
+serverUrl=http://72.62.75.169:9000
+serverVersion=10.7.0.96327
+dashboardUrl=http://72.62.75.169:9000/dashboard?id=sjmtfrotend
+ceTaskId=c2242d54-05e6-451d-ab72-825fc449ac8a
+ceTaskUrl=http://72.62.75.169:9000/api/ce/task?id=c2242d54-05e6-451d-ab72-825fc449ac8a

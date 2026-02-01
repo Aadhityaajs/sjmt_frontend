@@ -148,6 +148,7 @@ export const resetPassword = async (
   token: string,
   newPassword: string
 ): Promise<ApiResponse<void>> => {
+  console.log("reset password api")
   try {
     const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
       method: 'POST',
